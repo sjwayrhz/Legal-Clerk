@@ -3,6 +3,7 @@
 // @namespace    autofix
 // @version      1.0
 // @match        *://zxfw.court.gov.cn/*
+// @match        *://sdp.hnzycfc.com/*
 // @grant        none
 // @run-at       document-start
 // ==/UserScript==
