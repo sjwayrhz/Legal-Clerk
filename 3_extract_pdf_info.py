@@ -96,8 +96,8 @@ def process_folders(base_dir):
     print(f"当前锁定扫描路径: {base_dir}\n")
 
     # 1. 检查并处理当前目录(根目录)下的 PDF
-    root_pdf_path = os.path.join(base_dir, "强制执行申请书.pdf")
-    root_txt_path = os.path.join(base_dir, "强制执行申请书.txt")
+    root_pdf_path = os.path.join(base_dir, "_强制执行申请书.pdf")
+    root_txt_path = os.path.join(base_dir, "_强制执行申请书.txt")
     
     if os.path.exists(root_pdf_path) and os.path.isfile(root_pdf_path):
         print("发现当前目录(根目录)存在文件，正在处理...")
@@ -111,8 +111,8 @@ def process_folders(base_dir):
         # 判断是否为文件夹
         if os.path.isdir(folder_path):
             case_number = item
-            pdf_path = os.path.join(folder_path, "强制执行申请书.pdf")
-            txt_path = os.path.join(folder_path, "强制执行申请书.txt")
+            pdf_path = os.path.join(folder_path, "_强制执行申请书.pdf")
+            txt_path = os.path.join(folder_path, "_强制执行申请书.txt")
 
             # 如果文件夹内没有目标PDF，则跳过
             if not os.path.exists(pdf_path) or not os.path.isfile(pdf_path):
@@ -135,7 +135,7 @@ def process_folders(base_dir):
     elif root_case:
         print("\n✅ 仅处理了当前目录的文件，未发现子目录任务，已按要求跳过生成 Excel 汇总表。")
     else:
-        print("\n⚠️ 未在当前目录及子目录中找到任何 '强制执行申请书.pdf' 文件。")
+        print("\n⚠️ 未在当前目录及子目录中找到任何 '_强制执行申请书.pdf' 文件。")
 
 def generate_excel(base_dir, all_cases):
     """生成类似截图的Excel汇总表"""
