@@ -1,6 +1,5 @@
 import os
 from PyPDF2 import PdfReader, PdfWriter
-import win32com.client
 
 # =========强制锁定工作目录为脚本所在位置，根治右键运行失败==========
 SCRIPT_PATH = os.path.abspath(__file__)
@@ -9,38 +8,16 @@ os.chdir(BASE_WORK_DIR)
 print(f"✅ 已锁定程序根目录：{BASE_WORK_DIR}")
 
 
-def create_windows_shortcut(shortcut_save_path, target_folder_path):
-    """
-    创建Windows文件夹快捷方式(.lnk)
-    :param shortcut_save_path: 快捷方式完整保存路径
-    :param target_folder_path: 快捷方式指向的目标文件夹
-    """
-    try:
-        if not os.path.isdir(target_folder_path):
-            print(f"⚠️ 目标文件夹不存在 {target_folder_path}，跳过该快捷方式")
-            return False
-
-        shell = win32com.client.Dispatch("WScript.Shell")
-        shortcut = shell.CreateShortCut(shortcut_save_path)
-        shortcut.TargetPath = target_folder_path
-        shortcut.WorkingDirectory = target_folder_path
-        shortcut.Save()
-        print(f"✅ 目录内生成快捷方式：{shortcut_save_path}")
-        return True
-    except Exception as e:
-        print(f"❌ 创建快捷方式失败 {shortcut_save_path}：{str(e)}")
-        return False
-
 def split_execution_documents(input_pdf_path):
     # 检查输入文件是否存在
     if not os.path.exists(input_pdf_path):
         print(f"❌ 未找到文件: {input_pdf_path}")
         return
-    
-    # 当前PDF所在目录，快捷方式将生成在此目录
+
+    # 当前PDF所在目录
     work_dir = os.path.dirname(os.path.abspath(input_pdf_path))
     output_dir = work_dir
-
+    
     # 初始化 PDF 读取器
     try:
         reader = PdfReader(input_pdf_path)
@@ -50,11 +27,15 @@ def split_execution_documents(input_pdf_path):
         print(f"❌ 读取 PDF 失败: {e}")
         return
 
-    # 分页配置
+    # 分页配置（已在需要的文件名前面添加下划线 _）
+    # 注意：如果“裁决书及送达.pdf”和“借款合同.pdf”原本不在这个映射里，
+    # 需要确认它们的页码范围。这里先将你提到的几个加上下划线。
     page_mapping = {
-        "强制执行申请书.pdf": (5, 5),
+        "_强制执行申请书.pdf": (5, 5),
+        "_授权委托书.pdf": (13, 13),
+        "_裁决书及送达.pdf": (0, 0),  # 示例页码，请根据实际PDF调整
+        "_借款合同.pdf": (1, 4),      # 示例页码，请根据实际PDF调整
         "被执行人身份证.pdf": (14, 14),
-        "授权委托书.pdf": (13, 13),
         "送达地址确认书.pdf": (11, 11),
         "银行账户确认书.pdf": (10, 10),
         "纳入失信申请书.pdf": (9, 9),
@@ -76,25 +57,21 @@ def split_execution_documents(input_pdf_path):
             print(f"✅ 成功生成: {output_name}")
         except Exception as e:
             print(f"❌ 写入 {output_name} 失败: {e}")
-
-    # ========== 拆分完成后，在当前PDF所在目录生成两个快捷方式 ==========
-    print(f"\n🔗 在本目录 {work_dir} 创建指定快捷方式")
-    # 快捷1：申请人身份材料
-    lnk1 = os.path.join(work_dir, "申请人身份材料.lnk")
-    target1 = r"D:\sync\申请人身份材料"
-    create_windows_shortcut(lnk1, target1)
-
-    # 快捷2：授权委托书
-    lnk2 = os.path.join(work_dir, "授权委托书.lnk")
-    target2 = r"D:\sync\授权委托书"
-    create_windows_shortcut(lnk2, target2)
+            
     print("-" * 40)
+
+    # 3. 拆分完成后，删除源文件（强制执行申请材料.pdf）
+    try:
+        os.remove(input_pdf_path)
+        print(f"🗑️ 已成功删除源文件: {input_pdf_path}")
+    except Exception as e:
+        print(f"❌ 删除源文件失败: {e}")
 
 
 def find_and_split_all(target_filename="强制执行申请材料.pdf"):
     current_dir = os.getcwd()
     processed = 0
-
+    
     # 1. 当前目录查找
     current_file = os.path.join(current_dir, target_filename)
     if os.path.exists(current_file):
@@ -116,7 +93,7 @@ def find_and_split_all(target_filename="强制执行申请材料.pdf"):
 
     print(f"\n{'='*50}")
     if processed > 0:
-        print(f"🎉 全部任务完成！共处理 {processed} 个PDF文件，每个处理目录均生成对应快捷方式")
+        print(f"🎉 全部任务完成！共处理 {processed} 个PDF文件")
     else:
         print(f"⚠️ 未找到任何名为 '{target_filename}' 的PDF文件")
 
@@ -127,5 +104,6 @@ if __name__ == "__main__":
         find_and_split_all()
     except Exception as err:
         print(f"程序异常：{err}")
+    
     # 阻止控制台双击之后直接闪退
     input("\n按下回车键关闭窗口")
