@@ -32,14 +32,24 @@ def process_single_pdf(pdf_path, txt_path, case_number):
 
         info_text = text.replace("\n", "").replace(" ", "").replace("\u3000", "")
 
-        respondent_match = re.search(r"被执行人：(.*?)请求事项", info_text)
+        # 兼容中文全角“：”和英文半角“:”
+        respondent_match = re.search(r"被执行人[:：](.*?)请求事项", info_text)
         respondent_text = respondent_match.group(1) if respondent_match else info_text
 
-        name_match = re.search(r"^([^，。、]+)", respondent_text)
-        gender_match = re.search(r"性别：([^，。、]+)", respondent_text)
-        phone_match = re.search(r"(?:联系)?电话：(\d+)", respondent_text)
-        id_match = re.search(r"身份证号：([0-9xX]+)", respondent_text)
-        address_match = re.search(r"住(.*?)(?:，|。|身份证)", respondent_text)
+        # 兼容中英文逗号
+        name_match = re.search(r"^([^，,。、]+)", respondent_text)
+        
+        # PDF中可能没有“性别：”字样，直接匹配“男”或“女”
+        gender_match = re.search(r"(?:性别[:：])?([男女])", respondent_text)
+        
+        # 兼容“联系电话:”、“电话：”
+        phone_match = re.search(r"(?:联系)?电话[:：](\d+)", respondent_text)
+        
+        # 兼容“身份证号”和“身份证号码”，以及中英文冒号
+        id_match = re.search(r"身份证号(?:码)?[:：]([0-9xX]+)", respondent_text)
+        
+        # 兼容“住”、“住址”、“地址”，截取到下一个逗号或句号
+        address_match = re.search(r"(?:住址|地址|住)[:：]?([^，,。]+)", respondent_text)
 
         court = extract_court(text)
         name = name_match.group(1) if name_match else "未找到"
